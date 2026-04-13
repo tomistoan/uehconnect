@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UEH Connect</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+  <style>
+html,body{margin:0;padding:0;height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#f0f2f5;--surface:#fff;--text:#1a1a2e;--text2:#5a5a7a;--accent:#6c5ce7;--accent2:#00b894;--danger:#e74c3c;--card-shadow:0 2px 16px rgba(0,0,0,.08);--nav-bg:rgba(255,255,255,.95)}
+.dark{--bg:#0f0f1a;--surface:#1a1a2e;--text:#e8e8f0;--text2:#9a9ab0;--accent:#a29bfe;--accent2:#55efc4;--danger:#ff6b6b;--card-shadow:0 2px 16px rgba(0,0,0,.3);--nav-bg:rgba(26,26,46,.95)}
+.app-root{background:var(--bg);color:var(--text);height:100%;width:100%;overflow:hidden;position:relative}
+.surface{background:var(--surface)}
+.txt2{color:var(--text2)}
+.card-s{box-shadow:var(--card-shadow)}
+.screen{position:absolute;inset:0;transition:transform .35s cubic-bezier(.4,0,.2,1),opacity .35s;will-change:transform,opacity}
+.screen.hidden-r{transform:translateX(100%);opacity:0;pointer-events:none}
+.screen.hidden-l{transform:translateX(-100%);opacity:0;pointer-events:none}
+.screen.active{transform:translateX(0);opacity:1;pointer-events:auto}
+.fade-in{animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+@keyframes ripple{0%{box-shadow:0 0 0 0 rgba(108,92,231,.4)}100%{box-shadow:0 0 0 12px rgba(108,92,231,0)}}
+.marker{cursor:pointer;transition:transform .2s}.marker:hover{transform:scale(1.2)}
+.nav-item{transition:all .2s}.nav-item.active-nav .nav-icon{color:var(--accent)}.nav-item.active-nav .nav-label{color:var(--accent);font-weight:600}
+input,textarea,select{background:var(--surface);color:var(--text);border:1.5px solid color-mix(in srgb,var(--text2) 30%,transparent);font-family:'DM Sans',sans-serif}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 20%,transparent)}
+.btn-primary{background:var(--accent);color:#fff;border:none;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;font-weight:600}.btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-secondary{background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent);border:none;cursor:pointer;transition:all .2s;font-weight:600}.btn-secondary:hover{background:color-mix(in srgb,var(--accent) 25%,transparent)}
+.chip{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;border:1.5px solid color-mix(in srgb,var(--text2) 20%,transparent)}.chip.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--text2) 30%,transparent);border-radius:4px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);padding:12px 24px;border-radius:12px;font-weight:500;z-index:9999;transition:transform .4s cubic-bezier(.4,0,.2,1);font-size:14px}.toast.show{transform:translateX(-50%) translateY(0)}
+.toast-success{background:var(--accent2);color:#fff}.toast-info{background:var(--accent);color:#fff}
+.pomodoro-ring{stroke-dasharray:283;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear}
+.grid-pattern{background-image:radial-gradient(circle,color-mix(in srgb,var(--text2) 15%,transparent) 1px,transparent 1px);background-size:24px 24px}
+.map-bg{background:linear-gradient(135deg,#e8f5e9 0%,#e3f2fd 50%,#f3e5f5 100%)}.dark .map-bg{background:linear-gradient(135deg,#1a2e1a 0%,#1a1a2e 50%,#2e1a2e 100%)}
+</style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div id="app" class="app-root"><!-- Toast -->
+   <div id="toast" class="toast toast-info"></div><!-- LOGIN SCREEN -->
+   <div id="screen-login" class="screen active" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+    <div class="surface card-s" style="border-radius:24px;padding:32px;width:100%;max-width:400px">
+     <div style="text-align:center;margin-bottom:28px">
+      <div style="width:64px;height:64px;border-radius:18px;background:var(--accent);display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px"><i data-lucide="map-pin" style="color:#fff;width:32px;height:32px"></i>
+      </div>
+      <h1 id="login-title" style="font-size:26px;font-weight:700;margin:0 0 4px" data-i18n="login_title">UEH Connect</h1>
+      <p class="txt2" style="margin:0;font-size:14px" data-i18n="login_subtitle">Connect. Study. Thrive.</p>
+     </div>
+     <div id="login-form">
+      <div style="margin-bottom:14px"><label for="login-email" style="font-size:13px;font-weight:500;display:block;margin-bottom:4px" data-i18n="email">Email</label> <input id="login-email" type="email" placeholder="student@campus.edu" style="width:100%;padding:10px 14px;border-radius:12px;font-size:14px">
+      </div>
+      <div style="margin-bottom:20px"><label for="login-pass" style="font-size:13px;font-weight:500;display:block;margin-bottom:4px" data-i18n="password">Password</label> <input id="login-pass" type="password" placeholder="••••••••" style="width:100%;padding:10px 14px;border-radius:12px;font-size:14px">
+      </div><button class="btn-primary" onclick="doLogin()" style="width:100%;padding:12px;border-radius:12px;font-size:15px" data-i18n="sign_in">Sign In</button>
+      <div style="text-align:center;margin:16px 0;font-size:13px" class="txt2">
+       or
+      </div><button class="btn-secondary" onclick="doLogin()" style="width:100%;padding:12px;border-radius:12px;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px">
+       <svg width="18" height="18" viewbox="0 0 24 24">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" /><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" /><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" /><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+       </svg><span data-i18n="google_signin">Continue with Google</span> </button>
+      <p style="text-align:center;margin-top:18px;font-size:13px" class="txt2"><span data-i18n="no_account">No account?</span> <a href="#" onclick="showSignup();return false" style="color:var(--accent);font-weight:600;text-decoration:none" data-i18n="sign_up_link">Sign Up</a></p>
+     </div>
+     <div id="signup-form" style="display:none">
+      <div style="margin-bottom:12px"><label for="su-name" style="font-size:13px;font-weight:500;display:block;margin-bottom:4px" data-i18n="full_name">Full Name</label> <input id="su-name" type="text" placeholder="Alex Nguyen" style="width:100%;padding:10px 14px;border-radius:12px;font-size:14px">
+      </div>
+      <div style="margin-bottom:12px"><label for="su-email" style="font-size:13px;font-weight:500;display:block;margin-bottom:4px" data-i18n="email">Email</label> <input id="su-email" type="email" placeholder="alex@campus.edu" style="width:100%;padding:10px 14px;border-radius:12px;font-size:14px">
+      </div>
+      <div style="margin-bottom:12px"><label for="su-pass" style="font-size:13px;font-weight:500;display:block;margin-bottom:4px" data-i18n="password">Password</label> <input id="su-pass" type="password" placeholder="••••••••" style="width:100%;padding:10px 14px;border-radius:12px;font-size:14px">
+      </div>
+      <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px" data-i18n="major">Major</label> <select id="su-major" style="width:100%;padding:10px 14px;border-radius:12px;font-size:14px"> <option value="cs">Computer Science</option> <option value="eng">Engineering</option> <option value="bus">Business</option> <option value="art">Arts &amp; Design</option> <option value="sci">Sciences</option> <option value="med">Medicine</option> </select>
+      </div>
+      <div style="margin-bottom:16px"><label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px" data-i18n="interests">Interests</label>
+       <div id="interest-chips" style="display:flex;flex-wrap:wrap;gap:6px">
+       </div>
+      </div><button class="btn-primary" onclick="doSignup()" style="width:100%;padding:12px;border-radius:12px;font-size:15px" data-i18n="create_account">Create Account</button>
+      <p style="text-align:center;margin-top:14px;font-size:13px" class="txt2"><span data-i18n="have_account">Have an account?</span> <a href="#" onclick="showLogin();return false" style="color:var(--accent);font-weight:600;text-decoration:none" data-i18n="sign_in_link">Sign In</a></p>
+     </div>
+    </div>
+   </div><!-- MAIN APP SCREEN -->
+   <div id="screen-main" class="screen hidden-r" style="display:flex;flex-direction:column;height:100%"><!-- Top Bar -->
+    <header class="surface" style="padding:10px 16px;display:flex;align-items:center;justify-content:space-between;z-index:50;border-bottom:1px solid color-mix(in srgb,var(--text2) 12%,transparent)">
+     <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:36px;height:36px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center"><i data-lucide="map-pin" style="color:#fff;width:18px;height:18px"></i>
+      </div><span id="header-title" style="font-weight:700;font-size:17px">UEH Connect</span>
+     </div>
+     <div style="display:flex;align-items:center;gap:6px"><button onclick="toggleLang()" style="background:color-mix(in srgb,var(--accent) 12%,transparent);border:none;border-radius:10px;padding:6px 10px;font-size:12px;font-weight:600;color:var(--accent);cursor:pointer" id="lang-btn">EN</button> <button onclick="toggleTheme()" style="background:color-mix(in srgb,var(--accent) 12%,transparent);border:none;border-radius:10px;padding:6px 10px;font-size:16px;cursor:pointer" id="theme-btn">🌙</button> <button onclick="showNotifications()" style="background:none;border:none;cursor:pointer;position:relative;padding:6px"> <i data-lucide="bell" style="width:20px;height:20px;color:var(--text)"></i> <span style="position:absolute;top:2px;right:2px;width:8px;height:8px;background:var(--danger);border-radius:50%"></span> </button>
+     </div>
+    </header><!-- Main Content -->
+    <div id="main-content" style="flex:1;overflow-y:auto;overflow-x:hidden;position:relative"><!-- MAP TAB -->
+     <div id="tab-map" class="tab-content" style="height:100%;position:relative">
+      <div class="map-bg" style="height:100%;position:relative;overflow:hidden"><!-- Map Grid -->
+       <div class="grid-pattern" style="position:absolute;inset:0;opacity:.4"></div><!-- Map Roads -->
+       <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" viewbox="0 0 400 600" preserveaspectratio="xMidYMid slice"><line x1="0" y1="200" x2="400" y2="200" stroke="color-mix(in srgb,var(--text2) 20%,transparent)" stroke-width="3" stroke-dasharray="8,4" /> <line x1="0" y1="400" x2="400" y2="400" stroke="color-mix(in srgb,var(--text2) 20%,transparent)" stroke-width="3" stroke-dasharray="8,4" /> <line x1="150" y1="0" x2="150" y2="600" stroke="color-mix(in srgb,var(--text2) 20%,transparent)" stroke-width="3" stroke-dasharray="8,4" /> <line x1="300" y1="0" x2="300" y2="600" stroke="color-mix(in srgb,var(--text2) 20%,transparent)" stroke-width="3" stroke-dasharray="8,4" /> <path d="M0,100 Q200,150 400,80" stroke="color-mix(in srgb,var(--text2) 15%,transparent)" stroke-width="2" fill="none" />
+       </svg><!-- User Location -->
+       <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10">
+        <div style="width:20px;height:20px;background:var(--accent);border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 0 rgba(108,92,231,.4);animation:ripple 2s infinite"></div>
+        <div style="position:absolute;top:-28px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:600;white-space:nowrap" data-i18n="you">
+         You
+        </div>
+       </div><!-- Map Markers -->
+       <div id="map-markers"></div><!-- Map Legend -->
+       <div class="surface card-s" style="position:absolute;bottom:80px;left:12px;border-radius:14px;padding:10px 14px;font-size:11px;z-index:10">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+         <span style="width:10px;height:10px;border-radius:50%;background:#e74c3c;display:inline-block"></span><span data-i18n="alerts">Alerts</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+         <span style="width:10px;height:10px;border-radius:50%;background:#00b894;display:inline-block"></span><span data-i18n="places">Places</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+         <span style="width:10px;height:10px;border-radius:50%;background:#6c5ce7;display:inline-block"></span><span data-i18n="events">Events</span>
+        </div>
+       </div><!-- Post FAB --> <button onclick="showPostModal()" style="position:absolute;bottom:80px;right:16px;width:52px;height:52px;border-radius:16px;background:var(--accent);border:none;color:#fff;cursor:pointer;z-index:10;box-shadow:0 4px 16px rgba(108,92,231,.4);display:flex;align-items:center;justify-content:center"> <i data-lucide="plus" style="width:24px;height:24px"></i> </button> <!-- Quick Services -->
+       <div style="position:absolute;bottom:12px;left:0;right:0;z-index:10;padding:0 12px">
+        <div style="display:flex;gap:8px;overflow-x:auto;padding:4px 0;scrollbar-width:none" id="quick-services">
+        </div>
+       </div>
+      </div>
+     </div><!-- FEED TAB -->
+     <div id="tab-feed" class="tab-content" style="display:none;padding:16px">
+      <h2 style="font-size:20px;font-weight:700;margin:0 0 14px" data-i18n="community_feed">Community Feed</h2>
+      <div id="feed-list"></div>
+     </div><!-- STUDY TAB -->
+     <div id="tab-study" class="tab-content" style="display:none;padding:16px">
+      <h2 style="font-size:20px;font-weight:700;margin:0 0 14px" data-i18n="study_hub">Study Hub</h2><!-- Matching -->
+      <div class="surface card-s" style="border-radius:16px;padding:16px;margin-bottom:14px">
+       <h3 style="font-size:15px;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:6px"><i data-lucide="users" style="width:16px;height:16px;color:var(--accent)"></i><span data-i18n="study_partners">Study Partners</span></h3>
+       <div id="partner-list" style="display:flex;flex-direction:column;gap:10px"></div>
+      </div><!-- Study Rooms -->
+      <div class="surface card-s" style="border-radius:16px;padding:16px;margin-bottom:14px">
+       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h3 style="font-size:15px;font-weight:600;margin:0;display:flex;align-items:center;gap:6px"><i data-lucide="book-open" style="width:16px;height:16px;color:var(--accent2)"></i><span data-i18n="study_rooms">Study Rooms</span></h3><button class="btn-primary" onclick="createRoom()" style="padding:6px 14px;border-radius:10px;font-size:12px" data-i18n="create_room">+ Create</button>
+       </div>
+       <div id="room-list" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div><!-- QA -->
+      <div class="surface card-s" style="border-radius:16px;padding:16px;margin-bottom:14px">
+       <h3 style="font-size:15px;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:6px"><i data-lucide="help-circle" style="width:16px;height:16px;color:var(--danger)"></i><span data-i18n="qa_nearby">Q&amp;A Nearby</span></h3>
+       <div style="display:flex;gap:8px;margin-bottom:10px"><input id="qa-input" type="text" placeholder="Ask nearby students..." style="flex:1;padding:10px 14px;border-radius:12px;font-size:13px" data-i18n-placeholder="ask_placeholder"> <button class="btn-primary" onclick="postQuestion()" style="padding:10px 16px;border-radius:12px;font-size:13px" data-i18n="ask">Ask</button>
+       </div>
+       <div id="qa-list" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div><!-- Productivity -->
+      <div class="surface card-s" style="border-radius:16px;padding:16px">
+       <h3 style="font-size:15px;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:6px"><i data-lucide="target" style="width:16px;height:16px;color:var(--accent)"></i><span data-i18n="productivity">Productivity</span></h3>
+       <div id="goals-section"></div>
+       <div style="margin-top:12px">
+        <h4 style="font-size:13px;font-weight:600;margin:0 0 8px" class="txt2" data-i18n="leaderboard">🏆 Leaderboard</h4>
+        <div id="leaderboard"></div>
+       </div>
+      </div>
+     </div><!-- MESSAGES TAB -->
+     <div id="tab-messages" class="tab-content" style="display:none;padding:16px">
+      <h2 style="font-size:20px;font-weight:700;margin:0 0 14px" data-i18n="messages">Messages</h2>
+      <div id="chat-list"></div>
+     </div><!-- PROFILE TAB -->
+     <div id="tab-profile" class="tab-content" style="display:none;padding:16px">
+      <div id="profile-content"></div>
+     </div>
+    </div><!-- Bottom Nav -->
+    <nav class="surface" style="display:flex;border-top:1px solid color-mix(in srgb,var(--text2) 12%,transparent);padding:6px 0 10px;z-index:50"><button class="nav-item active-nav" onclick="switchTab('map')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;padding:4px" data-tab="map"> <i data-lucide="map" class="nav-icon" style="width:20px;height:20px"></i> <span class="nav-label" style="font-size:10px" data-i18n="map">Map</span> </button> <button class="nav-item" onclick="switchTab('feed')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;padding:4px" data-tab="feed"> <i data-lucide="newspaper" class="nav-icon" style="width:20px;height:20px"></i> <span class="nav-label" style="font-size:10px" data-i18n="feed">Feed</span> </button> <button class="nav-item" onclick="switchTab('study')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;padding:4px" data-tab="study"> <i data-lucide="book-open" class="nav-icon" style="width:20px;height:20px"></i> <span class="nav-label" style="font-size:10px" data-i18n="study">Study</span> </button> <button class="nav-item" onclick="switchTab('messages')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;padding:4px;position:relative" data-tab="messages"> <i data-lucide="message-circle" class="nav-icon" style="width:20px;height:20px"></i> <span class="nav-label" style="font-size:10px" data-i18n="chats">Chats</span> <span style="position:absolute;top:2px;right:calc(50% - 16px);width:7px;height:7px;background:var(--danger);border-radius:50%"></span> </button> <button class="nav-item" onclick="switchTab('profile')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;padding:4px" data-tab="profile"> <i data-lucide="user" class="nav-icon" style="width:20px;height:20px"></i> <span class="nav-label" style="font-size:10px" data-i18n="profile">Profile</span> </button>
+    </nav>
+   </div><!-- MODALS OVERLAY -->
+   <div id="modal-overlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:flex-end;justify-content:center">
+    <div id="modal-content" class="surface" style="width:100%;max-width:500px;border-radius:24px 24px 0 0;padding:24px;max-height:85%;overflow-y:auto">
+    </div>
+   </div><!-- STUDY ROOM SCREEN -->
+   <div id="screen-room" class="screen hidden-r" style="display:flex;flex-direction:column;height:100%">
+    <header class="surface" style="padding:12px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid color-mix(in srgb,var(--text2) 12%,transparent)"><button onclick="closeRoom()" style="background:none;border:none;cursor:pointer"><i data-lucide="arrow-left" style="width:20px;height:20px;color:var(--text)"></i></button>
+     <div>
+      <div id="room-title" style="font-weight:600;font-size:15px"></div>
+      <div id="room-members" class="txt2" style="font-size:12px"></div>
+     </div>
+    </header>
+    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden"><!-- Pomodoro -->
+     <div class="surface" style="padding:16px;text-align:center;border-bottom:1px solid color-mix(in srgb,var(--text2) 12%,transparent)">
+      <div style="position:relative;width:100px;height:100px;margin:0 auto 10px">
+       <svg width="100" height="100" style="transform:rotate(-90deg)"><circle cx="50" cy="50" r="45" fill="none" stroke="color-mix(in srgb,var(--text2) 15%,transparent)" stroke-width="6" /> <circle id="pomo-ring" cx="50" cy="50" r="45" fill="none" stroke="var(--accent)" stroke-width="6" class="pomodoro-ring" />
+       </svg>
+       <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:22px;font-weight:700" id="pomo-time">
+        25:00
+       </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center"><button class="btn-primary" onclick="togglePomodoro()" id="pomo-btn" style="padding:8px 20px;border-radius:10px;font-size:13px" data-i18n="start">Start</button> <button class="btn-secondary" onclick="resetPomodoro()" style="padding:8px 20px;border-radius:10px;font-size:13px" data-i18n="reset">Reset</button>
+      </div>
+     </div><!-- Room Chat -->
+     <div id="room-chat" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px"></div>
+     <div style="padding:10px 12px;display:flex;gap:8px;border-top:1px solid color-mix(in srgb,var(--text2) 12%,transparent)"><input id="room-msg-input" type="text" placeholder="Type a message..." style="flex:1;padding:10px 14px;border-radius:12px;font-size:13px" data-i18n-placeholder="type_message"> <button class="btn-primary" onclick="sendRoomMsg()" style="padding:10px 16px;border-radius:12px"><i data-lucide="send" style="width:16px;height:16px"></i></button>
+     </div>
+    </div>
+   </div><!-- CHAT SCREEN -->
+   <div id="screen-chat" class="screen hidden-r" style="display:flex;flex-direction:column;height:100%">
+    <header class="surface" style="padding:12px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid color-mix(in srgb,var(--text2) 12%,transparent)"><button onclick="closeChat()" style="background:none;border:none;cursor:pointer"><i data-lucide="arrow-left" style="width:20px;height:20px;color:var(--text)"></i></button>
+     <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px" id="chat-avatar"></div>
+     <div id="chat-name" style="font-weight:600;font-size:15px"></div>
+    </header>
+    <div id="chat-messages" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px"></div>
+    <div style="padding:10px 12px;display:flex;gap:8px;border-top:1px solid color-mix(in srgb,var(--text2) 12%,transparent)"><input id="chat-msg-input" type="text" placeholder="Type a message..." style="flex:1;padding:10px 14px;border-radius:12px;font-size:13px" data-i18n-placeholder="type_message" onkeydown="if(event.key==='Enter'){sendChatMsg();event.preventDefault()}"> <button class="btn-primary" onclick="sendChatMsg()" style="padding:10px 16px;border-radius:12px"><i data-lucide="send" style="width:16px;height:16px"></i></button>
+    </div>
+   </div><!-- NOTIFICATIONS SCREEN -->
+   <div id="screen-notif" class="screen hidden-r" style="display:flex;flex-direction:column;height:100%">
+    <header class="surface" style="padding:12px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid color-mix(in srgb,var(--text2) 12%,transparent)"><button onclick="closeNotif()" style="background:none;border:none;cursor:pointer"><i data-lucide="arrow-left" style="width:20px;height:20px;color:var(--text)"></i></button> <span style="font-weight:600;font-size:16px" data-i18n="notifications">Notifications</span>
+    </header>
+    <div id="notif-list" style="flex:1;overflow-y:auto;padding:12px"></div>
+   </div><!-- SERVICE SCREENS -->
+   <div id="screen-service" class="screen hidden-r" style="display:flex;flex-direction:column;height:100%">
+    <header class="surface" style="padding:12px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid color-mix(in srgb,var(--text2) 12%,transparent)"><button onclick="closeService()" style="background:none;border:none;cursor:pointer"><i data-lucide="arrow-left" style="width:20px;height:20px;color:var(--text)"></i></button> <span id="service-title" style="font-weight:600;font-size:16px"></span>
+    </header>
+    <div id="service-content" style="flex:1;overflow-y:auto;padding:16px"></div>
+   </div>
+  </div>
+  <script>
+// ===== STATE =====
+let currentLang='en',isDark=false,currentTab='map',loggedIn=false;
+let pomoRunning=false,pomoSeconds=1500,pomoInterval=null;
+let currentChatUser=null,currentRoom=null;
+const interests=['AI/ML','Web Dev','Data Science','Design','Math','Physics','Music','Sports','Gaming','Photography','Writing','Business'];
+const selectedInterests=new Set();
+
+// ===== i18n =====
+const i18n={
+en:{login_title:'UEH Connect',login_subtitle:'Connect. Study. Thrive.',email:'Email',password:'Password',sign_in:'Sign In',google_signin:'Continue with Google',no_account:"No account?",sign_up_link:'Sign Up',have_account:'Have an account?',sign_in_link:'Sign In',full_name:'Full Name',major:'Major',interests:'Interests',create_account:'Create Account',you:'You',alerts:'Alerts',places:'Places',events:'Events',community_feed:'Community Feed',study_hub:'Study Hub',study_partners:'Study Partners',study_rooms:'Study Rooms',create_room:'+ Create',qa_nearby:'Q&A Nearby',ask_placeholder:'Ask nearby students...',ask:'Ask',productivity:'Productivity',leaderboard:'🏆 Leaderboard',messages:'Messages',map:'Map',feed:'Feed',study:'Study',chats:'Chats',profile:'Profile',notifications:'Notifications',start:'Start',reset:'Reset',type_message:'Type a message...',connect:'Connect',invite:'Invite',join:'Join',set_goal:'Set Goal',add_goal:'Add Goal',goal_placeholder:'e.g. Study 2hrs daily',streak:'streak',pts:'pts',ride:'Ride',library:'Library',nearby_events:'Events',rooms:'Rooms',pickup:'Pickup location',destination:'Destination',book_ride:'Book Ride',search_books:'Search books...',reserve:'Reserve',browse_events:'Browse Events',your_profile:'Your Profile',edit_profile:'Edit Profile',study_goals:'Study Goals',app_settings:'App Settings',sign_out:'Sign Out',level:'Level',hours_studied:'Hours Studied',connections:'Connections',post_update:'Post Update',whats_happening:"What's happening nearby?",post:'Post',report:'Report',event_t:'Event',service:'Service',cancel:'Cancel',confirm_delete:'Delete?',yes_delete:'Yes',library_full:'📚 Library is packed!',free_coffee:'☕ Free coffee at Student Center',workshop:'🎓 AI Workshop at 3pm in Hall B',traffic:'🚗 Traffic jam on University Ave',post_posted:'Post shared!',goal_added:'Goal added!',room_created:'Room created!',question_posted:'Question posted!',ride_booked:'Ride booked!',reserved:'Reserved!',rsvp:'RSVP sent!',connected:'Connected!',invited:'Invited!',welcome:'Welcome back!'},
+vi:{login_title:'UEH Connect',login_subtitle:'Kết nối. Học tập. Phát triển.',email:'Email',password:'Mật khẩu',sign_in:'Đăng nhập',google_signin:'Tiếp tục với Google',no_account:'Chưa có tài khoản?',sign_up_link:'Đăng ký',have_account:'Đã có tài khoản?',sign_in_link:'Đăng nhập',full_name:'Họ và tên',major:'Ngành học',interests:'Sở thích',create_account:'Tạo tài khoản',you:'Bạn',alerts:'Cảnh báo',places:'Địa điểm',events:'Sự kiện',community_feed:'Bảng tin',study_hub:'Trung tâm học tập',study_partners:'Bạn học',study_rooms:'Phòng học',create_room:'+ Tạo',qa_nearby:'Hỏi đáp gần đây',ask_placeholder:'Hỏi sinh viên gần đây...',ask:'Hỏi',productivity:'Năng suất',leaderboard:'🏆 Bảng xếp hạng',messages:'Tin nhắn',map:'Bản đồ',feed:'Bảng tin',study:'Học tập',chats:'Chat',profile:'Hồ sơ',notifications:'Thông báo',start:'Bắt đầu',reset:'Đặt lại',type_message:'Nhập tin nhắn...',connect:'Kết nối',invite:'Mời',join:'Tham gia',set_goal:'Đặt mục tiêu',add_goal:'Thêm',goal_placeholder:'VD: Học 2 giờ mỗi ngày',streak:'chuỗi',pts:'điểm',ride:'Đi xe',library:'Thư viện',nearby_events:'Sự kiện',rooms:'Phòng',pickup:'Điểm đón',destination:'Điểm đến',book_ride:'Đặt xe',search_books:'Tìm sách...',reserve:'Đặt chỗ',browse_events:'Xem sự kiện',your_profile:'Hồ sơ của bạn',edit_profile:'Chỉnh sửa',study_goals:'Mục tiêu học tập',app_settings:'Cài đặt',sign_out:'Đăng xuất',level:'Cấp độ',hours_studied:'Giờ đã học',connections:'Kết nối',post_update:'Đăng bài',whats_happening:'Có gì xảy ra gần đây?',post:'Đăng',report:'Báo cáo',event_t:'Sự kiện',service:'Dịch vụ',cancel:'Hủy',confirm_delete:'Xóa?',yes_delete:'Có',library_full:'📚 Thư viện đông quá!',free_coffee:'☕ Cà phê miễn phí tại TTSV',workshop:'🎓 Workshop AI lúc 3pm tại Hội trường B',traffic:'🚗 Kẹt xe trên đường Đại học',post_posted:'Đã đăng bài!',goal_added:'Đã thêm mục tiêu!',room_created:'Đã tạo phòng!',question_posted:'Đã đăng câu hỏi!',ride_booked:'Đã đặt xe!',reserved:'Đã đặt chỗ!',rsvp:'Đã đăng ký!',connected:'Đã kết nối!',invited:'Đã mời!',welcome:'Chào mừng trở lại!'}
+};
+function t(key){return i18n[currentLang][key]||key}
+function updateAllText(){
+document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n');if(i18n[currentLang][k])el.textContent=i18n[currentLang][k]});
+document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{const k=el.getAttribute('data-i18n-placeholder');if(i18n[currentLang][k])el.placeholder=i18n[currentLang][k]});
+}
+
+// ===== THEME =====
+function toggleTheme(){isDark=!isDark;document.getElementById('app').classList.toggle('dark',isDark);document.getElementById('theme-btn').textContent=isDark?'☀️':'🌙'}
+function toggleLang(){currentLang=currentLang==='en'?'vi':'en';document.getElementById('lang-btn').textContent=currentLang.toUpperCase();updateAllText();renderAll()}
+
+// ===== TOAST =====
+function showToast(msg,type='info'){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast toast-${type} show`;setTimeout(()=>t.classList.remove('show'),2500)}
+
+// ===== AUTH =====
+function showSignup(){document.getElementById('login-form').style.display='none';document.getElementById('signup-form').style.display='block';renderInterestChips()}
+function showLogin(){document.getElementById('login-form').style.display='block';document.getElementById('signup-form').style.display='none'}
+function doLogin(){loggedIn=true;navigateTo('screen-main');showToast(t('welcome'),'success');renderAll()}
+function doSignup(){loggedIn=true;navigateTo('screen-main');showToast(t('welcome'),'success');renderAll()}
+function renderInterestChips(){const c=document.getElementById('interest-chips');c.innerHTML=interests.map(i=>`<span class="chip ${selectedInterests.has(i)?'selected':''}" onclick="toggleInterest('${i}')">${i}</span>`).join('')}
+function toggleInterest(i){selectedInterests.has(i)?selectedInterests.delete(i):selectedInterests.add(i);renderInterestChips()}
+
+// ===== NAVIGATION =====
+function navigateTo(screenId){document.querySelectorAll('.screen').forEach(s=>{if(s.id===screenId){s.classList.remove('hidden-r','hidden-l');s.classList.add('active')}else if(s.classList.contains('active')){s.classList.remove('active');s.classList.add('hidden-l')}})}
+function navigateBack(from,to){document.getElementById(from).classList.remove('active');document.getElementById(from).classList.add('hidden-r');document.getElementById(to).classList.remove('hidden-l','hidden-r');document.getElementById(to).classList.add('active')}
+
+function switchTab(tab){
+currentTab=tab;
+document.querySelectorAll('.tab-content').forEach(t=>t.style.display='none');
+document.getElementById('tab-'+tab).style.display=tab==='map'?'':'block';
+if(tab==='map')document.getElementById('tab-map').style.display='block';
+document.querySelectorAll('.nav-item').forEach(n=>{n.classList.toggle('active-nav',n.getAttribute('data-tab')===tab)});
+lucide.createIcons();
+}
+
+// ===== MAP DATA =====
+const mapMarkers=[
+{x:25,y:20,type:'alert',icon:'alert-triangle',label:'library_full',color:'#e74c3c'},
+{x:70,y:35,type:'event',icon:'calendar',label:'workshop',color:'#6c5ce7'},
+{x:15,y:65,type:'place',icon:'coffee',label:'free_coffee',color:'#00b894'},
+{x:80,y:70,type:'alert',icon:'car',label:'traffic',color:'#e74c3c'},
+{x:40,y:80,type:'place',icon:'book-open',label:'places',color:'#00b894'},
+{x:60,y:15,type:'event',icon:'users',label:'events',color:'#6c5ce7'},
+];
+
+function renderMapMarkers(){
+const c=document.getElementById('map-markers');
+c.innerHTML=mapMarkers.map((m,i)=>`
+<div class="marker" style="position:absolute;left:${m.x}%;top:${m.y}%;transform:translate(-50%,-50%);z-index:5" onclick="showMarkerDetail(${i})">
+<div style="width:36px;height:36px;border-radius:12px;background:${m.color};display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px ${m.color}44">
+<i data-lucide="${m.icon}" style="width:18px;height:18px;color:#fff"></i>
+</div>
+</div>`).join('');
+}
+
+function showMarkerDetail(i){
+const m=mapMarkers[i];
+showModal(`
+<div style="text-align:center;padding:8px 0">
+<div style="width:48px;height:48px;border-radius:14px;background:${m.color};display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px">
+<i data-lucide="${m.icon}" style="width:24px;height:24px;color:#fff"></i>
+</div>
+<h3 style="font-size:17px;font-weight:600;margin:0 0 6px">${t(m.label)}</h3>
+<p class="txt2" style="font-size:13px;margin:0 0 16px">📍 200m away • 3 min ago</p>
+<button class="btn-secondary" onclick="closeModal()" style="padding:10px 28px;border-radius:12px;font-size:14px">OK</button>
+</div>`);
+}
+
+// ===== QUICK SERVICES =====
+const services=[
+{icon:'car',label:'ride',color:'#0984e3',screen:'ride'},
+{icon:'book-open',label:'library',color:'#00b894',screen:'library'},
+{icon:'calendar',label:'nearby_events',color:'#6c5ce7',screen:'events'},
+{icon:'users',label:'rooms',color:'#e17055',screen:'rooms'},
+];
+function renderQuickServices(){
+const c=document.getElementById('quick-services');
+c.innerHTML=services.map(s=>`
+<button onclick="openService('${s.screen}')" style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:14px;border:none;cursor:pointer;font-weight:600;font-size:13px;color:#fff;background:${s.color};box-shadow:0 2px 10px ${s.color}44;font-family:'DM Sans',sans-serif">
+<i data-lucide="${s.icon}" style="width:16px;height:16px"></i>${t(s.label)}
+</button>`).join('');
+}
+
+// ===== SERVICE SCREENS =====
+function openService(type){
+document.getElementById('service-title').textContent=t(type==='ride'?'ride':type==='library'?'library':type==='events'?'nearby_events':'rooms');
+const c=document.getElementById('service-content');
+if(type==='ride'){c.innerHTML=`
+<div class="surface card-s" style="border-radius:16px;padding:20px">
+<div style="margin-bottom:14px"><label style="font-size:13px;font-weight:500;display:block;margin-bottom:4px">${t('pickup')}</label><input type="text" placeholder="Current location" style="width:100%;padding:10px 14px;border-radius:12px;font-size:14px" value="📍 Student Center"></div>
+<div style="margin-bottom:18px"><label style="font-size:13px;font-weight:500;display:block;margin-bottom:4px">${t('destination')}</label><input type="text" placeholder="Where to?" style="width:100%;padding:10px 14px;border-radius:12px;font-size:14px"></div>
+<div style="display:flex;gap:10px;margin-bottom:18px">
+${['🚗 Car','🛵 Scooter','🚲 Bike'].map((v,i)=>`<button class="chip ${i===0?'selected':''}" onclick="this.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));this.classList.add('selected')" style="flex:1;padding:10px;text-align:center">${v}</button>`).join('')}
+</div>
+<button class="btn-primary" onclick="showToast(t('ride_booked'),'success');closeService()" style="width:100%;padding:12px;border-radius:12px;font-size:15px">${t('book_ride')}</button>
+</div>`}
+else if(type==='library'){c.innerHTML=`
+<div class="surface card-s" style="border-radius:16px;padding:20px">
+<input type="text" placeholder="${t('search_books')}" style="width:100%;padding:10px 14px;border-radius:12px;font-size:14px;margin-bottom:14px">
+${['Introduction to Algorithms','Design Patterns','Calculus: Early Transcendentals','Digital Signal Processing'].map(b=>`
+<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid color-mix(in srgb,var(--text2) 12%,transparent)">
+<div><div style="font-weight:500;font-size:14px">${b}</div><div class="txt2" style="font-size:12px">Available • 2nd Floor</div></div>
+<button class="btn-secondary" onclick="this.textContent='✓';this.disabled=true;showToast(t('reserved'),'success')" style="padding:6px 14px;border-radius:10px;font-size:12px">${t('reserve')}</button>
+</div>`).join('')}
+</div>`}
+else if(type==='events'){c.innerHTML=`
+<div style="display:flex;flex-direction:column;gap:12px">
+${[{e:'🎓 AI/ML Workshop',d:'Hall B • 3:00 PM',c:'#6c5ce7'},{e:'🎵 Open Mic Night',d:'Student Center • 7:00 PM',c:'#e17055'},{e:'🏃 Campus Run 5K',d:'Track Field • 6:00 AM',c:'#00b894'},{e:'💼 Career Fair',d:'Main Auditorium • 10:00 AM',c:'#0984e3'}].map(v=>`
+<div class="surface card-s" style="border-radius:16px;padding:16px;border-left:4px solid ${v.c}">
+<div style="font-weight:600;font-size:15px;margin-bottom:4px">${v.e}</div>
+<div class="txt2" style="font-size:12px;margin-bottom:10px">📍 ${v.d}</div>
+<button class="btn-secondary" onclick="this.textContent='✓ Going';this.disabled=true;showToast(t('rsvp'),'success')" style="padding:6px 16px;border-radius:10px;font-size:12px">RSVP</button>
+</div>`).join('')}
+</div>`}
+else{c.innerHTML=`
+<button class="btn-primary" onclick="createRoom()" style="width:100%;padding:12px;border-radius:12px;font-size:14px;margin-bottom:14px">${t('create_room')}</button>
+<div style="display:flex;flex-direction:column;gap:10px">${studyRooms.map((r,i)=>renderRoomCard(r,i)).join('')}</div>`}
+navigateTo('screen-service');setTimeout(()=>lucide.createIcons(),50);
+}
+function closeService(){navigateBack('screen-service','screen-main');setTimeout(()=>lucide.createIcons(),50)}
+
+// ===== FEED =====
+let feedPosts=[
+{user:'Sarah K.',avatar:'👩‍💻',text:'library_full',time:'2m',type:'alert'},
+{user:'Mike T.',avatar:'👨‍🎓',text:'workshop',time:'15m',type:'event'},
+{user:'Lisa N.',avatar:'👩‍🎨',text:'free_coffee',time:'30m',type:'place'},
+{user:'James W.',avatar:'🧑‍💼',text:'traffic',time:'1h',type:'alert'},
+];
+function renderFeed(){
+const c=document.getElementById('feed-list');
+c.innerHTML=feedPosts.map(p=>`
+<div class="surface card-s fade-in" style="border-radius:16px;padding:14px;margin-bottom:10px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+<div style="width:36px;height:36px;border-radius:50%;background:color-mix(in srgb,var(--accent) 15%,transparent);display:flex;align-items:center;justify-content:center;font-size:18px">${p.avatar}</div>
+<div><div style="font-weight:600;font-size:14px">${p.user}</div><div class="txt2" style="font-size:11px">${p.time} ago • 📍 nearby</div></div>
+<span style="margin-left:auto;font-size:10px;padding:3px 8px;border-radius:8px;font-weight:600;background:${p.type==='alert'?'#e74c3c22':p.type==='event'?'#6c5ce722':'#00b89422'};color:${p.type==='alert'?'#e74c3c':p.type==='event'?'#6c5ce7':'#00b894'}">${p.type}</span>
+</div>
+<p style="margin:0;font-size:14px;line-height:1.5">${t(p.text)}</p>
+</div>`).join('');
+}
+
+// ===== STUDY PARTNERS =====
+const partners=[
+{name:'Emily Chen',avatar:'👩‍🔬',major:'CS',match:95,interests:['AI/ML','Web Dev']},
+{name:'David Park',avatar:'👨‍💻',major:'Engineering',match:88,interests:['Data Science','Math']},
+{name:'Ana Silva',avatar:'👩‍🎓',major:'Design',match:82,interests:['Design','Photography']},
+];
+function renderPartners(){
+document.getElementById('partner-list').innerHTML=partners.map(p=>`
+<div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;background:color-mix(in srgb,var(--accent) 5%,transparent)">
+<div style="width:44px;height:44px;border-radius:14px;background:color-mix(in srgb,var(--accent) 15%,transparent);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${p.avatar}</div>
+<div style="flex:1;min-width:0">
+<div style="font-weight:600;font-size:14px">${p.name}</div>
+<div class="txt2" style="font-size:11px">${p.major} • ${p.match}% match</div>
+<div style="display:flex;gap:4px;margin-top:3px">${p.interests.map(i=>`<span style="font-size:10px;padding:2px 6px;border-radius:6px;background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)">${i}</span>`).join('')}</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+<button class="btn-primary" onclick="this.textContent='✓';this.disabled=true;showToast(t('connected'),'success')" style="padding:5px 12px;border-radius:8px;font-size:11px">${t('connect')}</button>
+<button class="btn-secondary" onclick="this.textContent='✓';this.disabled=true;showToast(t('invited'),'success')" style="padding:5px 12px;border-radius:8px;font-size:11px">${t('invite')}</button>
+</div>
+</div>`).join('');
+}
+
+// ===== STUDY ROOMS =====
+let studyRooms=[
+{name:'Algo Grinders',members:['👩‍💻','👨‍💻','🧑‍🎓'],topic:'Algorithms',active:true},
+{name:'Design Thinkers',members:['👩‍🎨','👨‍🎓'],topic:'UX Design',active:true},
+{name:'Math Wizards',members:['🧑‍🔬','👩‍🏫','👨‍💻','🧑‍💼'],topic:'Linear Algebra',active:false},
+];
+function renderRoomCard(r,i){
+return `<div class="surface card-s" style="border-radius:14px;padding:14px;border-left:3px solid ${r.active?'var(--accent2)':'var(--text2)'}">
+<div style="display:flex;justify-content:space-between;align-items:start">
+<div>
+<div style="font-weight:600;font-size:14px">${r.name}</div>
+<div class="txt2" style="font-size:12px">${r.topic} • ${r.members.length} members</div>
+<div style="display:flex;gap:-4px;margin-top:6px">${r.members.map(m=>`<span style="font-size:16px">${m}</span>`).join(' ')}</div>
+</div>
+<button class="btn-primary" onclick="joinRoom(${i})" style="padding:6px 14px;border-radius:10px;font-size:12px">${t('join')}</button>
+</div>
+</div>`;
+}
+function renderRooms(){document.getElementById('room-list').innerHTML=studyRooms.map((r,i)=>renderRoomCard(r,i)).join('')}
+function createRoom(){
+const name=`Study Room ${studyRooms.length+1}`;
+studyRooms.unshift({name,members:['🧑‍💻'],topic:'General',active:true});
+renderRooms();showToast(t('room_created'),'success');
+}
+function joinRoom(i){
+currentRoom=studyRooms[i];
+document.getElementById('room-title').textContent=currentRoom.name;
+document.getElementById('room-members').textContent=`${currentRoom.members.length} members • ${currentRoom.topic}`;
+document.getElementById('room-chat').innerHTML=`
+<div style="text-align:center;padding:20px" class="txt2"><div style="font-size:28px;margin-bottom:8px">📚</div><div style="font-size:13px">Welcome to ${currentRoom.name}!</div></div>`;
+resetPomodoro();
+navigateTo('screen-room');setTimeout(()=>lucide.createIcons(),50);
+}
+function closeRoom(){navigateBack('screen-room','screen-main');setTimeout(()=>lucide.createIcons(),50)}
+function sendRoomMsg(){
+const input=document.getElementById('room-msg-input');if(!input.value.trim())return;
+const chat=document.getElementById('room-chat');
+chat.innerHTML+=`<div style="align-self:flex-end;background:var(--accent);color:#fff;padding:8px 14px;border-radius:14px 14px 4px 14px;max-width:75%;font-size:13px">${input.value}</div>`;
+const msg=input.value;input.value='';chat.scrollTop=chat.scrollHeight;
+setTimeout(()=>{
+const replies=['Great point! 👍','Let me check that...','I agree!','Can you explain more?','Nice work! 🎉'];
+chat.innerHTML+=`<div style="display:flex;gap:8px;align-items:end"><span style="font-size:16px">${currentRoom.members[0]}</span><div style="background:var(--surface);border:1px solid color-mix(in srgb,var(--text2) 15%,transparent);padding:8px 14px;border-radius:14px 14px 14px 4px;max-width:75%;font-size:13px">${replies[Math.floor(Math.random()*replies.length)]}</div></div>`;
+chat.scrollTop=chat.scrollHeight;
+},1200);
+}
+
+// ===== POMODORO =====
+function togglePomodoro(){
+if(pomoRunning){clearInterval(pomoInterval);pomoRunning=false;document.getElementById('pomo-btn').textContent=t('start')}
+else{pomoRunning=true;document.getElementById('pomo-btn').textContent='Pause';pomoInterval=setInterval(()=>{
+pomoSeconds--;if(pomoSeconds<=0){clearInterval(pomoInterval);pomoRunning=false;pomoSeconds=1500;showToast('🎉 Pomodoro complete!','success')}
+updatePomoDisplay()},1000)}
+}
+function resetPomodoro(){clearInterval(pomoInterval);pomoRunning=false;pomoSeconds=1500;updatePomoDisplay();document.getElementById('pomo-btn').textContent=t('start')}
+function updatePomoDisplay(){
+const m=Math.floor(pomoSeconds/60),s=pomoSeconds%60;
+document.getElementById('pomo-time').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+const pct=(1500-pomoSeconds)/1500;
+document.getElementById('pomo-ring').style.strokeDashoffset=283-(283*pct);
+}
+
+// ===== QA =====
+let questions=[
+{user:'Alex',avatar:'🧑‍💻',q:'Anyone know where to find quiet study spots near the engineering building?',answers:2,time:'5m'},
+{user:'Mai',avatar:'👩‍🎓',q:'Is the campus shuttle running late today?',answers:4,time:'12m'},
+];
+function renderQA(){
+document.getElementById('qa-list').innerHTML=questions.map(q=>`
+<div style="padding:10px;border-radius:12px;background:color-mix(in srgb,var(--accent) 5%,transparent)">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+<span style="font-size:16px">${q.avatar}</span>
+<span style="font-weight:500;font-size:13px">${q.user}</span>
+<span class="txt2" style="font-size:11px;margin-left:auto">${q.time}</span>
+</div>
+<p style="margin:0 0 6px;font-size:13px;line-height:1.4">${q.q}</p>
+<span class="txt2" style="font-size:11px">💬 ${q.answers} answers</span>
+</div>`).join('');
+}
+function postQuestion(){
+const input=document.getElementById('qa-input');if(!input.value.trim())return;
+questions.unshift({user:'You',avatar:'🧑‍💻',q:input.value,answers:0,time:'now'});
+input.value='';renderQA();showToast(t('question_posted'),'success');
+}
+
+// ===== PRODUCTIVITY =====
+let goals=[{text:'Study 2hrs daily',streak:5,done:false},{text:'Complete DS assignment',streak:0,done:true}];
+const leaderboardData=[{name:'You',pts:1250,avatar:'🧑‍💻'},{name:'Emily C.',pts:1180,avatar:'👩‍🔬'},{name:'David P.',pts:1050,avatar:'👨‍💻'},{name:'Ana S.',pts:980,avatar:'👩‍🎓'}];
+function renderProductivity(){
+document.getElementById('goals-section').innerHTML=`
+<div style="display:flex;gap:8px;margin-bottom:10px">
+<input id="goal-input" type="text" placeholder="${t('goal_placeholder')}" style="flex:1;padding:8px 12px;border-radius:10px;font-size:13px">
+<button class="btn-primary" onclick="addGoal()" style="padding:8px 14px;border-radius:10px;font-size:12px">${t('add_goal')}</button>
+</div>
+${goals.map((g,i)=>`
+<div style="display:flex;align-items:center;gap:10px;padding:8px 0;${i<goals.length-1?'border-bottom:1px solid color-mix(in srgb,var(--text2) 10%,transparent)':''}">
+<input type="checkbox" ${g.done?'checked':''} onchange="goals[${i}].done=this.checked" style="width:18px;height:18px;accent-color:var(--accent)">
+<div style="flex:1"><span style="font-size:13px;${g.done?'text-decoration:line-through;opacity:.6':''}">${g.text}</span></div>
+${g.streak>0?`<span style="font-size:11px;color:var(--accent);font-weight:600">🔥${g.streak} ${t('streak')}</span>`:''}
+</div>`).join('')}`;
+document.getElementById('leaderboard').innerHTML=leaderboardData.map((l,i)=>`
+<div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+<span style="font-weight:700;font-size:14px;width:20px;color:${i===0?'#f1c40f':i===1?'#95a5a6':i===2?'#cd7f32':'var(--text2)'}">#${i+1}</span>
+<span style="font-size:16px">${l.avatar}</span>
+<span style="font-size:13px;font-weight:500;flex:1">${l.name}</span>
+<span style="font-size:12px;font-weight:600;color:var(--accent)">${l.pts} ${t('pts')}</span>
+</div>`).join('');
+}
+function addGoal(){const input=document.getElementById('goal-input');if(!input.value.trim())return;goals.unshift({text:input.value,streak:0,done:false});input.value='';renderProductivity();showToast(t('goal_added'),'success')}
+
+// ===== MESSAGES =====
+const chatUsers=[
+{name:'Emily Chen',avatar:'👩‍🔬',lastMsg:'See you at the library!',time:'2m',unread:2},
+{name:'Study Group',avatar:'📚',lastMsg:'Meeting at 3pm?',time:'15m',unread:0},
+{name:'David Park',avatar:'👨‍💻',lastMsg:'Thanks for the notes!',time:'1h',unread:1},
+{name:'Ana Silva',avatar:'👩‍🎓',lastMsg:'Great session today!',time:'3h',unread:0},
+];
+function renderChats(){
+document.getElementById('chat-list').innerHTML=chatUsers.map((u,i)=>`
+<div onclick="openChat(${i})" style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;cursor:pointer;transition:background .2s;margin-bottom:4px" onmouseover="this.style.background='color-mix(in srgb,var(--accent) 5%,transparent)'" onmouseout="this.style.background='transparent'">
+<div style="width:44px;height:44px;border-radius:14px;background:color-mix(in srgb,var(--accent) 15%,transparent);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${u.avatar}</div>
+<div style="flex:1;min-width:0">
+<div style="display:flex;justify-content:space-between"><span style="font-weight:600;font-size:14px">${u.name}</span><span class="txt2" style="font-size:11px">${u.time}</span></div>
+<div class="txt2" style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.lastMsg}</div>
+</div>
+${u.unread?`<span style="width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center">${u.unread}</span>`:''}
+</div>`).join('');
+}
+function openChat(i){
+currentChatUser=chatUsers[i];
+document.getElementById('chat-avatar').textContent=currentChatUser.avatar;
+document.getElementById('chat-avatar').style.background='color-mix(in srgb,var(--accent) 15%,transparent)';
+document.getElementById('chat-name').textContent=currentChatUser.name;
+document.getElementById('chat-messages').innerHTML=`
+<div style="text-align:center;padding:16px" class="txt2"><div style="font-size:12px">Today</div></div>
+<div style="display:flex;gap:8px;align-items:end"><span style="font-size:16px">${currentChatUser.avatar}</span><div style="background:var(--surface);border:1px solid color-mix(in srgb,var(--text2) 15%,transparent);padding:8px 14px;border-radius:14px 14px 14px 4px;max-width:75%;font-size:13px">${currentChatUser.lastMsg}</div></div>`;
+navigateTo('screen-chat');setTimeout(()=>lucide.createIcons(),50);
+}
+function closeChat(){navigateBack('screen-chat','screen-main');setTimeout(()=>lucide.createIcons(),50)}
+function sendChatMsg(){
+const input=document.getElementById('chat-msg-input');if(!input.value.trim())return;
+const chat=document.getElementById('chat-messages');
+chat.innerHTML+=`<div style="align-self:flex-end;background:var(--accent);color:#fff;padding:8px 14px;border-radius:14px 14px 4px 14px;max-width:75%;font-size:13px">${input.value}</div>`;
+input.value='';chat.scrollTop=chat.scrollHeight;
+setTimeout(()=>{
+const r=['Got it!','Sounds great 👍','Let me know!','Sure thing!','See you there!'];
+chat.innerHTML+=`<div style="display:flex;gap:8px;align-items:end"><span style="font-size:16px">${currentChatUser.avatar}</span><div style="background:var(--surface);border:1px solid color-mix(in srgb,var(--text2) 15%,transparent);padding:8px 14px;border-radius:14px 14px 14px 4px;max-width:75%;font-size:13px">${r[Math.floor(Math.random()*r.length)]}</div></div>`;
+chat.scrollTop=chat.scrollHeight;
+},1000);
+}
+
+// ===== PROFILE =====
+function renderProfile(){
+document.getElementById('profile-content').innerHTML=`
+<div class="surface card-s" style="border-radius:20px;padding:24px;text-align:center;margin-bottom:14px">
+<div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:inline-flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:12px">🧑‍💻</div>
+<h2 style="font-size:20px;font-weight:700;margin:0 0 2px">Alex Nguyen</h2>
+<p class="txt2" style="margin:0 0 14px;font-size:13px">Computer Science • ${t('level')} 12</p>
+<div style="display:flex;justify-content:center;gap:24px">
+<div><div style="font-weight:700;font-size:18px">48</div><div class="txt2" style="font-size:11px">${t('hours_studied')}</div></div>
+<div><div style="font-weight:700;font-size:18px">23</div><div class="txt2" style="font-size:11px">${t('connections')}</div></div>
+<div><div style="font-weight:700;font-size:18px">🔥7</div><div class="txt2" style="font-size:11px">${t('streak')}</div></div>
+</div>
+</div>
+<div class="surface card-s" style="border-radius:16px;overflow:hidden">
+${[{icon:'target',label:'study_goals'},{icon:'settings',label:'app_settings'},{icon:'log-out',label:'sign_out',danger:true}].map(item=>`
+<button onclick="${item.danger?'doLogout()':''}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;width:100%;background:none;border:none;border-bottom:1px solid color-mix(in srgb,var(--text2) 8%,transparent);cursor:pointer;font-size:14px;font-weight:500;color:${item.danger?'var(--danger)':'var(--text)'};font-family:'DM Sans',sans-serif;text-align:left">
+<i data-lucide="${item.icon}" style="width:18px;height:18px"></i>${t(item.label)}
+<i data-lucide="chevron-right" style="width:16px;height:16px;margin-left:auto;opacity:.4"></i>
+</button>`).join('')}
+</div>`;
+}
+function doLogout(){loggedIn=false;navigateBack('screen-main','screen-login');setTimeout(()=>lucide.createIcons(),50)}
+
+// ===== NOTIFICATIONS =====
+function showNotifications(){
+document.getElementById('notif-list').innerHTML=[
+{icon:'📚',text:'Library study room available',time:'2m'},
+{icon:'👥',text:'Emily wants to connect',time:'10m'},
+{icon:'🎓',text:'AI Workshop starts in 1 hour',time:'30m'},
+{icon:'⚡',text:'You earned 50 XP!',time:'1h'},
+{icon:'🔔',text:'New Q&A answer near you',time:'2h'},
+].map(n=>`
+<div class="fade-in" style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;margin-bottom:6px;background:color-mix(in srgb,var(--accent) 5%,transparent)">
+<span style="font-size:24px">${n.icon}</span>
+<div style="flex:1"><div style="font-size:14px;font-weight:500">${n.text}</div><div class="txt2" style="font-size:11px">${n.time} ago</div></div>
+</div>`).join('');
+navigateTo('screen-notif');setTimeout(()=>lucide.createIcons(),50);
+}
+function closeNotif(){navigateBack('screen-notif','screen-main');setTimeout(()=>lucide.createIcons(),50)}
+
+// ===== MODAL =====
+function showModal(html){const o=document.getElementById('modal-overlay');o.style.display='flex';document.getElementById('modal-content').innerHTML=html;setTimeout(()=>lucide.createIcons(),50)}
+function closeModal(){document.getElementById('modal-overlay').style.display='none'}
+document.getElementById('modal-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal()});
+
+function showPostModal(){
+showModal(`
+<h3 style="font-size:17px;font-weight:600;margin:0 0 14px">${t('post_update')}</h3>
+<textarea id="post-text" rows="3" placeholder="${t('whats_happening')}" style="width:100%;padding:12px;border-radius:12px;font-size:14px;resize:none"></textarea>
+<div style="display:flex;gap:8px;margin:12px 0">
+${['alert','event_t','service'].map(type=>`<button class="chip" onclick="this.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));this.classList.add('selected')" data-type="${type}">${t(type)}</button>`).join('')}
+</div>
+<div style="display:flex;gap:8px">
+<button class="btn-secondary" onclick="closeModal()" style="flex:1;padding:10px;border-radius:12px">${t('cancel')}</button>
+<button class="btn-primary" onclick="submitPost()" style="flex:1;padding:10px;border-radius:12px">${t('post')}</button>
+</div>`);
+}
+function submitPost(){
+const text=document.getElementById('post-text').value;if(!text.trim()){closeModal();return}
+feedPosts.unshift({user:'You',avatar:'🧑‍💻',text,time:'now',type:'update'});
+closeModal();showToast(t('post_posted'),'success');renderFeed();
+}
+
+// ===== RENDER ALL =====
+function renderAll(){
+renderMapMarkers();renderQuickServices();renderFeed();renderPartners();
+renderRooms();renderQA();renderProductivity();renderChats();renderProfile();
+updateAllText();
+setTimeout(()=>lucide.createIcons(),50);
+}
+
+// ===== ELEMENT SDK =====
+const defaultConfig={
+background_color:'#f0f2f5',surface_color:'#ffffff',text_color:'#1a1a2e',accent_color:'#6c5ce7',secondary_color:'#00b894',
+font_family:'DM Sans',font_size:14,app_title:'UEH Connect'
+};
+
+window.elementSdk.init({
+defaultConfig,
+onConfigChange:async(config)=>{
+const root=document.documentElement;
+const accent=config.accent_color||defaultConfig.accent_color;
+const bg=config.background_color||defaultConfig.background_color;
+const surface=config.surface_color||defaultConfig.surface_color;
+const text=config.text_color||defaultConfig.text_color;
+const secondary=config.secondary_color||defaultConfig.secondary_color;
+root.style.setProperty('--accent',accent);
+root.style.setProperty('--bg',bg);
+root.style.setProperty('--surface',surface);
+root.style.setProperty('--text',text);
+root.style.setProperty('--accent2',secondary);
+const font=config.font_family||defaultConfig.font_family;
+const size=config.font_size||defaultConfig.font_size;
+document.body.style.fontFamily=`${font}, sans-serif`;
+document.body.style.fontSize=`${size}px`;
+const title=config.app_title||defaultConfig.app_title;
+document.getElementById('header-title').textContent=title;
+document.getElementById('login-title').textContent=title;
+},
+mapToCapabilities:(config)=>({
+recolorables:[
+{get:()=>config.background_color||defaultConfig.background_color,set:v=>{config.background_color=v;window.elementSdk.setConfig({background_color:v})}},
+{get:()=>config.surface_color||defaultConfig.surface_color,set:v=>{config.surface_color=v;window.elementSdk.setConfig({surface_color:v})}},
+{get:()=>config.text_color||defaultConfig.text_color,set:v=>{config.text_color=v;window.elementSdk.setConfig({text_color:v})}},
+{get:()=>config.accent_color||defaultConfig.accent_color,set:v=>{config.accent_color=v;window.elementSdk.setConfig({accent_color:v})}},
+{get:()=>config.secondary_color||defaultConfig.secondary_color,set:v=>{config.secondary_color=v;window.elementSdk.setConfig({secondary_color:v})}},
+],
+borderables:[],
+fontEditable:{get:()=>config.font_family||defaultConfig.font_family,set:v=>{config.font_family=v;window.elementSdk.setConfig({font_family:v})}},
+fontSizeable:{get:()=>config.font_size||defaultConfig.font_size,set:v=>{config.font_size=v;window.elementSdk.setConfig({font_size:v})}},
+}),
+mapToEditPanelValues:(config)=>new Map([['app_title',config.app_title||defaultConfig.app_title]])
+});
+
+// Init
+renderAll();
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9eafe6b1f6f34092',t:'MTc3NTk3MjQ3OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
